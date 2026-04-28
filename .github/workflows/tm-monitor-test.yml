@@ -1,0 +1,75 @@
+name: TM Monitor Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      date_mode:
+        description: "Яку дату використовувати: last_update або app_date"
+        required: true
+        default: "last_update"
+        type: choice
+        options:
+          - last_update
+          - app_date
+
+      date_from:
+        description: "Дата від, формат дд.мм.рррр"
+        required: true
+        default: "01.04.2026"
+
+      date_to:
+        description: "Дата до, формат дд.мм.рррр"
+        required: true
+        default: "28.04.2026"
+
+      threshold:
+        description: "Мінімальний score схожості, наприклад 70"
+        required: true
+        default: "70"
+
+      max_pages:
+        description: "Максимальна кількість сторінок API. 0 = без обмеження"
+        required: true
+        default: "10"
+
+jobs:
+  run-tm-monitor:
+    name: Run TM monitor test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Show input parameters
+        run: |
+          echo "date_mode=${{ inputs.date_mode }}"
+          echo "date_from=${{ inputs.date_from }}"
+          echo "date_to=${{ inputs.date_to }}"
+          echo "threshold=${{ inputs.threshold }}"
+          echo "max_pages=${{ inputs.max_pages }}"
+
+      - name: Run TM monitor test
+        run: |
+          node scripts/tm_monitor_test.mjs \
+            --date-mode "${{ inputs.date_mode }}" \
+            --from "${{ inputs.date_from }}" \
+            --to "${{ inputs.date_to }}" \
+            --threshold "${{ inputs.threshold }}" \
+            --max-pages "${{ inputs.max_pages }}"
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tm-monitor-results
+          path: out/
+          if-no-files-found: error
