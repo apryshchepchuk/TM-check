@@ -1,0 +1,69 @@
+name: TM Word Presence Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      date_mode:
+        description: "Яку дату використовувати: app_date або last_update"
+        required: true
+        default: "app_date"
+        type: choice
+        options:
+          - app_date
+          - last_update
+
+      date_from:
+        description: "Дата від, формат дд.мм.рррр"
+        required: true
+        default: "24.04.2026"
+
+      date_to:
+        description: "Дата до, формат дд.мм.рррр"
+        required: true
+        default: "24.04.2026"
+
+      max_pages:
+        description: "Максимальна кількість сторінок API. 0 = без обмеження"
+        required: true
+        default: "0"
+
+jobs:
+  check-word-presence:
+    name: Check TM word elements
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Show input parameters
+        run: |
+          echo "date_mode=${{ inputs.date_mode }}"
+          echo "date_from=${{ inputs.date_from }}"
+          echo "date_to=${{ inputs.date_to }}"
+          echo "max_pages=${{ inputs.max_pages }}"
+
+      - name: Run word presence check
+        run: |
+          node scripts/tm_word_presence_check.mjs \
+            --date-mode "${{ inputs.date_mode }}" \
+            --from "${{ inputs.date_from }}" \
+            --to "${{ inputs.date_to }}" \
+            --max-pages "${{ inputs.max_pages }}"
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tm-word-presence-results
+          path: out/
+          if-no-files-found: error
