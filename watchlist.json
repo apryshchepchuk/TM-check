@@ -1,0 +1,42 @@
+[
+  {
+    "id": "BIO_MEDIC",
+    "name": "bio medic",
+    "variants": [
+      "bio medic",
+      "biomedic",
+      "bio-medik",
+      "біо медік",
+      "біомедік",
+      "био медик"
+    ],
+    "classes": ["3", "5", "10"],
+    "notes": "Тестова ТМ для первинної перевірки"
+  },
+  {
+    "id": "ENOZID_FORTE",
+    "name": "енозид форте",
+    "variants": [
+      "енозид форте",
+      "енозид",
+      "enozid forte",
+      "enosid forte",
+      "enozide forte"
+    ],
+    "classes": ["5"],
+    "notes": "Тестова ТМ для первинної перевірки"
+  },
+  {
+    "id": "AKNEFOX",
+    "name": "акнефокс",
+    "variants": [
+      "акнефокс",
+      "aknefox",
+      "acnefox",
+      "akne fox",
+      "acne fox"
+    ],
+    "classes": ["3", "5"],
+    "notes": "Тестова ТМ для первинної перевірки"
+  }
+]
