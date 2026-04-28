@@ -1,0 +1,101 @@
+name: Patent Owner Extract Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      obj_type:
+        description: "Тип об'єкта: 1 винахід, 2 корисна модель, 6 промисловий зразок"
+        required: true
+        default: "2"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "6"
+
+      obj_state:
+        description: "Стан: 1 заявка, 2 охоронний документ, all без фільтра"
+        required: true
+        default: "2"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "all"
+
+      date_mode:
+        description: "Яку дату використовувати"
+        required: true
+        default: "reg_date"
+        type: choice
+        options:
+          - app_date
+          - reg_date
+          - last_update
+
+      date_from:
+        description: "Дата від, формат дд.мм.рррр"
+        required: true
+        default: "01.01.2026"
+
+      date_to:
+        description: "Дата до, формат дд.мм.рррр"
+        required: true
+        default: "31.01.2026"
+
+      object_number:
+        description: "Необов'язково: номер заявки/патенту для перевірки одного об'єкта"
+        required: false
+        default: ""
+
+      max_pages:
+        description: "Максимальна кількість сторінок API. 0 = без обмеження"
+        required: true
+        default: "0"
+
+jobs:
+  patent-owner-extract-check:
+    name: Extract patent owner data
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Show input parameters
+        run: |
+          echo "obj_type=${{ inputs.obj_type }}"
+          echo "obj_state=${{ inputs.obj_state }}"
+          echo "date_mode=${{ inputs.date_mode }}"
+          echo "date_from=${{ inputs.date_from }}"
+          echo "date_to=${{ inputs.date_to }}"
+          echo "object_number=${{ inputs.object_number }}"
+          echo "max_pages=${{ inputs.max_pages }}"
+
+      - name: Run patent owner extract check
+        run: |
+          node scripts/patent_owner_extract_check.mjs \
+            --obj-type "${{ inputs.obj_type }}" \
+            --obj-state "${{ inputs.obj_state }}" \
+            --date-mode "${{ inputs.date_mode }}" \
+            --from "${{ inputs.date_from }}" \
+            --to "${{ inputs.date_to }}" \
+            --object-number "${{ inputs.object_number }}" \
+            --max-pages "${{ inputs.max_pages }}"
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: patent-owner-extract-results
+          path: out/
+          if-no-files-found: error
