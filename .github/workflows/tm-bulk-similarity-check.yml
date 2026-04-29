@@ -1,0 +1,101 @@
+name: TM Bulk Similarity Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      date_mode:
+        description: "Яку дату використовувати: app_date або last_update"
+        required: true
+        default: "app_date"
+        type: choice
+        options:
+          - app_date
+          - last_update
+
+      date_from:
+        description: "Дата від, формат дд.мм.рррр"
+        required: true
+        default: "01.01.2026"
+
+      date_to:
+        description: "Дата до, формат дд.мм.рррр"
+        required: true
+        default: "29.04.2026"
+
+      threshold:
+        description: "Мінімальний score схожості, 0-100"
+        required: true
+        default: "80"
+
+      app_class_filter:
+        description: "Фільтр класів заявок, напр. 3,5,10. Порожньо або all = усі класи"
+        required: false
+        default: "3,5,10"
+
+      watchlist_file:
+        description: "Файл зі списком назв, одна назва на рядок"
+        required: true
+        default: "watchlist.txt"
+
+      max_pages:
+        description: "Максимальна кількість сторінок API. 0 = без обмеження"
+        required: true
+        default: "0"
+
+      include_raw:
+        description: "Додавати raw_applications.json в artifact"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  tm-bulk-similarity-check:
+    name: Run TM bulk similarity check
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Show input parameters
+        run: |
+          echo "date_mode=${{ inputs.date_mode }}"
+          echo "date_from=${{ inputs.date_from }}"
+          echo "date_to=${{ inputs.date_to }}"
+          echo "threshold=${{ inputs.threshold }}"
+          echo "app_class_filter=${{ inputs.app_class_filter }}"
+          echo "watchlist_file=${{ inputs.watchlist_file }}"
+          echo "max_pages=${{ inputs.max_pages }}"
+          echo "include_raw=${{ inputs.include_raw }}"
+
+      - name: Run TM bulk similarity check
+        run: |
+          node scripts/tm_bulk_similarity_check.mjs \
+            --date-mode "${{ inputs.date_mode }}" \
+            --from "${{ inputs.date_from }}" \
+            --to "${{ inputs.date_to }}" \
+            --threshold "${{ inputs.threshold }}" \
+            --app-class-filter "${{ inputs.app_class_filter }}" \
+            --watchlist-file "${{ inputs.watchlist_file }}" \
+            --max-pages "${{ inputs.max_pages }}" \
+            --include-raw "${{ inputs.include_raw }}"
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tm-bulk-similarity-results
+          path: out/
+          if-no-files-found: error
